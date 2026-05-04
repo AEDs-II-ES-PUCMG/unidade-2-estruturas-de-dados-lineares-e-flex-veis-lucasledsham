@@ -54,7 +54,29 @@ public class Pilha<E> {
 	 */
 	public Pilha<E> subPilha(int numItens) {
 		
-		// TODO
-		return null;
+		// Contar quantos elementos existem na pilha
+		int totalElementos = 0;
+		Celula<E> celulaAtual = topo;
+		
+		while (celulaAtual != fundo) {
+			totalElementos++;
+			celulaAtual = celulaAtual.getProximo();
+		}
+		
+		// Verificar se há elementos suficientes
+		if (numItens > totalElementos || numItens < 0) {
+			throw new IllegalArgumentException("A pilha não contém " + numItens + " elementos!");
+		}
+		
+		// Criar nova pilha e copiar os elementos
+		Pilha<E> novaPilha = new Pilha<>();
+		celulaAtual = topo;
+		
+		for (int i = 0; i < numItens; i++) {
+			novaPilha.empilhar(celulaAtual.getItem());
+			celulaAtual = celulaAtual.getProximo();
+		}
+		
+		return novaPilha;
 	}
 }

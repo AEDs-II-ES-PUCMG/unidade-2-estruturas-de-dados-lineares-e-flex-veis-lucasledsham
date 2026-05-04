@@ -21,6 +21,9 @@ public class App {
 
     /** Pilha de pedidos */
     static Pilha<Pedido> pilhaPedidos = new Pilha<>();
+	
+	/** Pilha de produtos mais recentemente pedidos */
+	static Pilha<Produto> pilhaProdutosRecentes = new Pilha<>();
         
     static void limparTela() {
         System.out.print("\033[H\033[2J");
@@ -206,23 +209,119 @@ public class App {
     
     /**
      * Finaliza um pedido, momento no qual ele deve ser armazenado em uma pilha de pedidos.
+     * Também adiciona os produtos do pedido à pilha de produtos recentemente pedidos.
      * @param pedido O pedido que deve ser finalizado.
      */
     public static void finalizarPedido(Pedido pedido) {
     	
-    	// TODO
+    	if (pedido == null) {
+    		System.out.println("Nenhum pedido foi iniciado!");
+    		return;
+    	}
+    	
+    	// Adicionar pedido à pilha de pedidos
+    	pilhaPedidos.empilhar(pedido);
+    	
+    	// Adicionar produtos do pedido à pilha de produtos recentes
+    	ItemDePedido[] itens = pedido.getItensDoPedido();
+    	for (int i = 0; i < itens.length && itens[i] != null; i++) {
+    		pilhaProdutosRecentes.empilhar(itens[i].getProduto());
+    	}
+    	
+    	System.out.println("Pedido finalizado com sucesso!");
     }
     
     public static void listarProdutosPedidosRecentes() {
     	
-    	// TODO
+    	cabecalho();
+    	
+    	if (pilhaProdutosRecentes.vazia()) {
+    		System.out.println("Nenhum produto foi pedido ainda!");
+    		return;
+    	}
+    	
+    	System.out.println("\nPRODUTOS MAIS RECENTEMENTE PEDIDOS:");
+    	
+    	try {
+    		// Criar uma sub-pilha com todos os produtos recentes
+    		int totalProdutos = 0;
+    		Pilha<Produto> pilhaTemp = pilhaProdutosRecentes;
+    		
+    		// Contar quantos produtos existem
+    		while (!pilhaTemp.vazia()) {
+    			totalProdutos++;
+    			pilhaTemp = pilhaTemp.subPilha(totalProdutos);
+    		}
+    		
+    		// Mostrar até 10 produtos mais recentes
+    		int produtosAMostrar = Math.min(totalProdutos, 10);
+    		Pilha<Produto> subPilha = pilhaProdutosRecentes.subPilha(produtosAMostrar);
+    		
+    		int contador = 1;
+    		while (!subPilha.vazia()) {
+    			Produto produto = subPilha.desempilhar();
+    			System.out.println(String.format("%02d - %s", contador++, produto.toString()));
+    		}
+    	} catch (Exception e) {
+    		System.out.println("Erro ao listar produtos recentes: " + e.getMessage());
+    	}
     }
     
 	public static void main(String[] args) {
 		
 		teclado = new Scanner(System.in, Charset.forName("UTF-8"));
         
-		nomeArquivoDados = "produtos.txt";
+		// ========== TAREFA 1: TESTES PRELIMINARES ==========
+		System.out.println("========== TESTES PRELIMINARES ==========");
+		System.out.println("Testando a classe Pilha com dígitos de matrícula...\n");
+		
+		// Criar pilha para testes
+		Pilha<Integer> pilhaTestes = new Pilha<>();
+		
+		// Solicitar dígitos da matrícula ao usuário
+		System.out.print("Digite os dígitos do seu número de matrícula (sem repetição): ");
+		String digitosMatricula = teclado.nextLine();
+		
+		// Inserir dígitos sem repetição
+		boolean[] digitos_adicionados = new boolean[10];
+		System.out.println("\nEmpilhando dígitos sem repetição:");
+		
+		for (char c : digitosMatricula.toCharArray()) {
+			if (Character.isDigit(c)) {
+				int digito = Character.getNumericValue(c);
+				if (!digitos_adicionados[digito]) {
+					pilhaTestes.empilhar(digito);
+					digitos_adicionados[digito] = true;
+					System.out.println("  -> Empilhado: " + digito);
+				}
+			}
+		}
+		
+		// Imprimir conteúdo da pilha
+		System.out.println("\nConteúdo da pilha (do topo ao fundo):");
+		Pilha<Integer> pilhaTemp = new Pilha<>();
+		int contador = 1;
+		
+		while (!pilhaTestes.vazia()) {
+			int valor = pilhaTestes.desempilhar();
+			System.out.println(String.format("  Posição %d: %d", contador++, valor));
+			pilhaTemp.empilhar(valor);
+		}
+		
+		// Reempilhar na pilha original (para não perder os dados)
+		while (!pilhaTemp.vazia()) {
+			pilhaTestes.empilhar(pilhaTemp.desempilhar());
+		}
+		
+		System.out.println("\nPilha após testes (reempilhada):");
+		while (!pilhaTestes.vazia()) {
+			System.out.println("  -> Desempilhado: " + pilhaTestes.desempilhar());
+		}
+		
+		System.out.println("\n============================================\n");
+		// ========== FIM DOS TESTES PRELIMINARES ==========
+		
+        nomeArquivoDados = "produtos.txt";
         produtosCadastrados = lerProdutos(nomeArquivoDados);
         
         Pedido pedido = null;
